@@ -306,3 +306,9 @@ def car_data(filename_content):
             continue
 
         yield TrackRow(frame_id, int(id_), ratio * float(F1x), ratio * float(F1y))
+
+def porto_data(row):
+    trajectory_id = row["TRIP_ID"]
+    poly_line = list(eval(row["POLYLINE"]))
+    for frame_id, point in enumerate(poly_line):
+        yield TrackRow(int(frame_id), int(trajectory_id), point[0], point[1])

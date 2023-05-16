@@ -4,6 +4,7 @@ import shutil
 import numpy as np
 import random
 
+import pandas as pd
 import pysparkling
 import scipy.io
 
@@ -116,6 +117,20 @@ def car_data(sc, input_file):
             .wholeTextFiles(input_file)
             .flatMap(readers.car_data)
             .cache())
+
+
+def porto_data(sc, input_file):
+    print('processing ' + input_file)
+    
+    df = pd.read_csv(input_file)
+    df = df[df['MISSING_DATA'] == False]
+    df = df[df['POLYLINE'].str.len() > 1]
+    track_rows = []
+    for idx, row in df.iterrows():
+         track_rows.extend(readers.porto_data(row))
+
+    # convert to RDD
+    return sc.parallelize(track_rows).cache()
 
 def write(input_rows, output_file, args):
     """ Write Valid Scenes without categorization """
@@ -251,21 +266,25 @@ def main():
 
     # Real datasets conversion
     if not args.synthetic:
-        write(biwi(sc, 'data/raw/biwi/seq_hotel/obsmat.txt'),
-              'output_pre/{split}/biwi_hotel.ndjson', args)
-        categorize(sc, 'output_pre/{split}/biwi_hotel.ndjson', args)
-        write(crowds(sc, 'data/raw/crowds/crowds_zara01.vsp'),
-              'output_pre/{split}/crowds_zara01.ndjson', args)
-        categorize(sc, 'output_pre/{split}/crowds_zara01.ndjson', args)
-        write(crowds(sc, 'data/raw/crowds/crowds_zara03.vsp'),
-              'output_pre/{split}/crowds_zara03.ndjson', args)
-        categorize(sc, 'output_pre/{split}/crowds_zara03.ndjson', args)
-        write(crowds(sc, 'data/raw/crowds/students001.vsp'),
-              'output_pre/{split}/crowds_students001.ndjson', args)
-        categorize(sc, 'output_pre/{split}/crowds_students001.ndjson', args)
-        write(crowds(sc, 'data/raw/crowds/students003.vsp'),
-              'output_pre/{split}/crowds_students003.ndjson', args)
-        categorize(sc, 'output_pre/{split}/crowds_students003.ndjson', args)
+        # write(biwi(sc, 'data/raw/biwi/seq_hotel/obsmat.txt'),
+        #       'output_pre/{split}/biwi_hotel.ndjson', args)
+        # categorize(sc, 'output_pre/{split}/biwi_hotel.ndjson', args)
+        # write(crowds(sc, 'data/raw/crowds/crowds_zara01.vsp'),
+        #       'output_pre/{split}/crowds_zara01.ndjson', args)
+        # categorize(sc, 'output_pre/{split}/crowds_zara01.ndjson', args)
+        # write(crowds(sc, 'data/raw/crowds/crowds_zara03.vsp'),
+        #       'output_pre/{split}/crowds_zara03.ndjson', args)
+        # categorize(sc, 'output_pre/{split}/crowds_zara03.ndjson', args)
+        # write(crowds(sc, 'data/raw/crowds/students001.vsp'),
+        #       'output_pre/{split}/crowds_students001.ndjson', args)
+        # categorize(sc, 'output_pre/{split}/crowds_students001.ndjson', args)
+        # write(crowds(sc, 'data/raw/crowds/students003.vsp'),
+        #       'output_pre/{split}/crowds_students003.ndjson', args)
+        # categorize(sc, 'output_pre/{split}/crowds_students003.ndjson', args)
+
+        write(porto_data(sc, 'data/raw/porto/data.csv'),
+              'output_pre/{split}/porto.ndjson', args)
+        categorize(sc, 'output_pre/{split}/porto.ndjson', args)
 
         # # # new datasets
         # write(lcas(sc, 'data/raw/lcas/test/data.csv'),
